@@ -1,0 +1,22 @@
+#Configuration file for the GATK workflow
+
+Reference_genome: "/mnt/scratch/nazilak/ref_index/reference_hg38_with_chr"
+logpath: "/mnt/scratch/nazilak/GATK/logs"
+Data_pre_processing: "/mnt/scratch/nazilak/GATK/Data_pre_processing"
+Variant_calling: "/mnt/scratch/nazilak/GATK/Variant_calling"
+Temp_dir_path: "/mnt/scratch/nazilak/tmp"
+Resource_bundle_gatk: "/mnt/scratch/nazilak/resource_bundle_gatk"
+Script: "/home/nazilak/Master/Script-gatk/convert_vcf_to_csv.py"
+Intervals: "/mnt/scratch/nazilak/resource_bundle_gatk/DHS3501Z_liftover_hg38_short.bed"
+sample_sheet: "/home/nazilak/Master/Data_Tumor-Normal__QiaSeqPanel_overview.csv"
+Benchmark: "/mnt/scratch/nazilak/GATK/Benchmark"
+homemade_PON: "/mnt/scratch/nazilak/GATK/Variant_calling/homemade_PON"
+
+singularity:
+  enabled: true #whether or not to run with singularity 
+  bind_directory: "/mnt/scratch" #Directory to bind to the container
+  singularity_image: "/home/nazilak/gatk_latest.sif" #gatk image to run 
+
+
+use_homemade_pon: false
+update_genomicsdb: false # Set to true to update the workspace, need to run it first to create
