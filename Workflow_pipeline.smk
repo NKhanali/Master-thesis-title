@@ -10,7 +10,7 @@ homemade_PON = config["homemade_PON"]
 Script = config["Script"]
 Intervals = config["Intervals"]
 Benchmark = config["Benchmark"]
-sample_sheet = config["sample_sheet"]
+sample_sheet = config["sample_sheet"] 
 
 use_singularity = config.get("use_singularity", True)
 singularity_bind = config.get("singularity_bind", "/mnt/scratch:/mnt/scratch")
