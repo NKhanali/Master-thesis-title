@@ -126,7 +126,7 @@ rule Sort_normal:
         mkdir -p {params.Temp_dir}
         trap "rm -rf {params.Temp_dir}" EXIT
 
-        samtools sort -@ {threads} -m {resources.mem_mb}M  -T {params.Temp_dir}/tmp_prefix {input.Bam} -o {output.sort} 2> {log.log}
+        samtools sort -n -@ {threads} -m {resources.mem_mb}M  -T {params.Temp_dir}/tmp_prefix {input.Bam} -o {output.sort} 2> {log.log}
         samtools index {output.sort}
         """
         
