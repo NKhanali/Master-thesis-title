@@ -11,6 +11,7 @@ Intervals: "/mnt/scratch/nazilak/resource_bundle_gatk/DHS3501Z_liftover_hg38_sho
 sample_sheet: "/home/nazilak/Master/Data_Tumor-Normal__QiaSeqPanel_overview.csv"
 Benchmark: "/mnt/scratch/nazilak/GATK/Benchmark"
 homemade_PON: "/mnt/scratch/nazilak/GATK/Variant_calling/homemade_PON"
+CreateHomemadePON: "/home/nazilak/Master/Script-gatk"
 
 singularity:
   enabled: true #whether or not to run with singularity 

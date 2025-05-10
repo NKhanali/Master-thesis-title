@@ -11,7 +11,7 @@ Script = config["Script"]
 Intervals = config["Intervals"]
 Benchmark = config["Benchmark"]
 sample_sheet = config["sample_sheet"] 
-
+CreateHomemadePON = config["CreateHomemadePON"]
 use_singularity = config.get("use_singularity", True)
 singularity_bind = config.get("singularity_bind", "/mnt/scratch:/mnt/scratch")
 singularity_image = config.get("singularity_image", "/home/nazilak/gatk_latest.sif")
@@ -45,7 +45,7 @@ SAMPLES_NUMBER = get_sample_number(sample_sheet)
 
 # Include homemade PON rules only if use_homemade_pon is true
 if use_homemade_pon:
-    include: "/home/nazilak/Master/Script-gatk/PON_COMPLETE.smk"
+    include: f"{CreateHomemadePON}/CreateHomemadePON.smk"
 
 rule all:
     input: 

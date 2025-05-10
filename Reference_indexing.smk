@@ -1,14 +1,15 @@
 
-Reference_genome = "/mnt/scratch/nazilak/ref_index/reference_hg38_with_chr.fa"
+configfile: "/home/nazilak/Master/Script-gatk/COMPLETE_config.yaml"
+Reference_genome = config["Reference_genome"]
 
 rule all:
     input: 
-        expand("/mnt/scratch/nazilak/resource_bundle_gatk/GCF_000001405.13_GRCh37_genomic.{ext}", ext = ["amb", "ann", "bwt", "pac", "sa", "dict", "fna.fai"])
+        expand("/mnt/scratch/nazilak/resource_bundle_gatk/reference_hg38_with_chr.{ext}", ext = ["amb", "ann", "bwt", "pac", "sa", "dict", "fa.fai"])
 
 
 rule ref_index:
     input: 
-        ref = Reference_genome + ".fna"
+        ref = Reference_genome + ".fa"
     output:
         Reference_genome + ".amb",  
         Reference_genome + ".ann",  
@@ -25,9 +26,9 @@ rule ref_index:
 
 rule fai:
     input:
-        ref = Reference_genome + ".fna"  
+        ref = Reference_genome + ".fa"  
     output: 
-        Reference_genome + ".fna.fai"
+        Reference_genome + ".fa.fai"
     shell:
         """
         samtools faidx {input.ref} -o {output}

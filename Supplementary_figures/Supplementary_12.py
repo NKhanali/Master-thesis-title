@@ -3,6 +3,9 @@ import re
 import csv
 from matplotlib.colors import ListedColormap, BoundaryNorm
 import seaborn as sns
+import pandas as pd
+import matplotlib.pyplot as plt
+
 
 # Function to process each VCF file
 def process_vcf_file(vcf_file_path, sample_number, csv_writer):
@@ -29,9 +32,9 @@ def process_vcf_file(vcf_file_path, sample_number, csv_writer):
                 if len(func_parts) >= 10:
                     # Extract only selected FUNCOTATION fields
                     selected_fields = [
-                        func_parts[0],  # FUNCOTATION_1
-                        func_parts[5],  # FUNCOTATION_6
-                        func_parts[7],  # FUNCOTATION_8
+                        func_parts[0],  # Gene name
+                        func_parts[5],  # Variant Classification 
+                        func_parts[7],  # Variant Type
                     ]
 
                     # Write row with sample number and selected fields
@@ -41,7 +44,7 @@ def process_vcf_file(vcf_file_path, sample_number, csv_writer):
 
 
 # Input and output paths
-vcf_directory = '/mnt/scratch/nazilak/GATK/Variant_calling/Liftover'  # Update as needed
+vcf_directory = '/mnt/scratch/nazilak/GATK/Variant_calling/Liftover'  
 output_csv_file = '/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_output.csv'
 
 
@@ -50,13 +53,7 @@ with open(output_csv_file, mode='w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
     
     # Header row with selected columns
-    header = [
-        'Sample_Nr',
-        'Gene name',       # FUNCOTATION_1
-        'Variant Classification', # FUNCOTATION_6cd ..
-        'Variant Type' #FUNCOTATION_8
-
-    ]
+    header = ['Sample_Nr','Gene name', 'Variant Classification', 'Variant Type']
     csv_writer.writerow(header)
 
     # Loop through VCFs
@@ -69,8 +66,7 @@ with open(output_csv_file, mode='w', newline='') as csvfile:
 print(f'Done! Output saved to {output_csv_file}')
 
 ################################################################
-import pandas as pd
-import matplotlib.pyplot as plt
+
 
 # Load the filtered CSV file
 csv_file = '/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_output.csv'
@@ -97,12 +93,6 @@ plt.show()
 print(f'Done! barplot_variant_classification.png')
 
 ################################################
-
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from matplotlib.colors import ListedColormap, BoundaryNorm
-
 
 def create_variant_heatmap(csv_path):
     # Read the CSV file
@@ -137,13 +127,10 @@ def create_variant_heatmap(csv_path):
     }
     df["Impact Rank"] = df["Merged Classification"].map(impact_ranking)
 
-    # Select the most impactful variant per gene per sample
+    # For each sample and gene, select the variant with the highest impact (lowest rank)
     selected_variants = df.loc[df.groupby(["Sample_Nr", "Gene name"])["Impact Rank"].idxmin()]
-
-    # Pivot table
     pivot_data = selected_variants.pivot(index="Gene name", columns="Sample_Nr", values="Impact Rank")
 
-    # Reindex gene order based on how frequently they're affected
     unique_genes = df["Gene name"].unique()
     pivot_data = pivot_data.reindex(unique_genes)
     variant_counts = pivot_data.notna().sum(axis=1)
@@ -153,33 +140,52 @@ def create_variant_heatmap(csv_path):
     # Extract numeric sample numbers
     sample_numbers = df["Sample_Nr"].astype(str).str.extract(r"(\d+)")[0].astype(int).unique()
     sample_numbers = sorted(sample_numbers)
-
-    # Rename and sort columns numerically
     pivot_data.columns = pivot_data.columns.astype(str).str.extract(r"(\d+)")[0].astype(float).astype('Int64')
     pivot_data = pivot_data.reindex(columns=sample_numbers)
-
-    # Ensure all sample numbers (e.g. 1–63) are in the x-axis (this is because sample 55 and 51)
     full_sample_range = list(range(1, 64))  # 1 to 63 inclusive
     pivot_data = pivot_data.reindex(columns=full_sample_range)
 
-    # Create the heatmap
     plt.figure(figsize=(20, len(pivot_data.index) * 0.2))
 
+
+   # --- Begin Option 1: Custom colorbar ---
+    fig, ax = plt.subplots(figsize=(20, len(pivot_data.index) * 0.2))
+
+
+    # Generate a color palette with one color per unique rank
     num_categories = len(impact_ranking)
     palette = sns.color_palette("RdYlBu", n_colors=num_categories)
     cmap = ListedColormap(palette)
     bounds = list(range(1, num_categories + 2))
     norm = BoundaryNorm(bounds, cmap.N)
+    #ax = sns.heatmap(pivot_data, cmap=cmap, norm=norm, cbar_kws={'label': 'Variant Classification'})
+    # Draw heatmap without colorbar
+    sns.heatmap(
+        pivot_data,
+        cmap=cmap,
+        norm=norm,
+        ax=ax,
+        cbar=False
+    )
 
-    ax = sns.heatmap(pivot_data, cmap=cmap, norm=norm, cbar_kws={'label': 'Variant Classification'})
+    # Create custom colorbar
+    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
+    cbar = fig.colorbar(
+        sm,
+        ax=ax,
+        orientation='vertical',
+        fraction=0.03,  # smaller = thinner colorbar
+        pad=0.02,
+        aspect=50        # higher = thinner colorbar
+    )
 
     # Configure colorbar ticks and labels
-    cbar = ax.collections[0].colorbar
+    #cbar = ax.collections[0].colorbar
     rank_to_variant = {rank: variant for variant, rank in impact_ranking.items()}
     all_ranks = sorted(impact_ranking.values())
     cbar.set_ticks(all_ranks)
     cbar.set_ticklabels([rank_to_variant[rank] for rank in all_ranks])
-    cbar.set_label("Variant Classification")
+    cbar.set_label("Variant Classification", fontsize=25)
 
     # Final formatting
     plt.title("Heatmap of Most Impactful Variant Classifications GATK")
@@ -195,31 +201,28 @@ def create_variant_heatmap(csv_path):
 
     print("Done! heatmapGATK.svg")
 
-# Example usage
+
 create_variant_heatmap("/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_output.csv")
 
 
 
-######################################################
-import csv
 
-# Use a set to store unique gene names
-unique_genes = set()
+#######################################################
+# Load the filtered CSV file
+df = pd.read_csv('/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_output.csv')
 
-# Open your CSV file
-with open("/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_output.csv", mode="r", newline='') as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-        unique_genes.add(row["Gene name"])
+# Count variants per gene (each gene only once)
+gene_counts = df['Gene name'].value_counts().head(20)
 
-# Write the unique gene names to list.txt
-with open("/mnt/scratch/nazilak/Results/Protein_change/gene_list.txt", mode="w") as outfile:
-    for gene in sorted(unique_genes):
-        outfile.write(gene + "\n")
-print("Done! gene_list.txt")
+# Prepare output path in the same directory as the CSV
+output_path = '/mnt/scratch/nazilak/Results/Protein_change/top20_GATK.txt'
 
+# Write the top 20 genes to the text file (each gene only once)
+with open(output_path, 'w') as f:
+    for gene in gene_counts.index:
+        f.write(f"{gene}\n")
 
-
+print(f"Top 20 genes written to {output_path}")
 
 
 
