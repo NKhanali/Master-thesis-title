@@ -24,4 +24,4 @@ The repository is organized as follows:
 - **`variant_comparison.py/`** - Python script for making a csv file containing information about all the variants called by both CLCGW and GATK
 - **`variant_comparison.py/`** - Python script for making a csv file containing information about all the variants called by both CLCGW and GATK, when the custom PON were utilized
 - **`Workflow_pipeline_config.yaml/`** - Configuration file for the GATK Best Practices workflow for Short Somatic Variant Discovery
-- ""'Workflow_pipeline.smk'** - GATK Best Practices workflow for Short Somatic Variant Discovery pipeline using Snakemake workflow manager
+- **'Workflow_pipeline.smk'** - GATK Best Practices workflow for Short Somatic Variant Discovery pipeline using Snakemake workflow manager
