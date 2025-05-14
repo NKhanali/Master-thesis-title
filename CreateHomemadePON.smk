@@ -74,7 +74,7 @@ rule genomicsdb_import:
         ref = Reference_genome + ".fa",
         pon_vcfs = expand(f"{Variant_calling}/CreatePON/{{normal}}_pon.vcf.gz", normal=normals)
     output:
-        pon_db = directory(f"{Variant_calling}/CreatePON/pon_db")  # Flagged as directory
+        pon_db = directory(f"{Variant_calling}/CreatePON/pon_db")  
     params:
         intervals = f"{Intervals}",
         Temp_dir = f"{Temp_dir_path}/tmp_GDBI",

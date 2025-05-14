@@ -10,16 +10,15 @@ singularity_image = config.get("singularity_image", "/home/nazilak/gatk_latest.s
 import glob
 import os
 
-# Dynamically detect sample IDs based on input filenames
+
 input_files = glob.glob("/mnt/scratch/nazilak/CLC_vcf/Annotated_somatic_variants/*_B*.vcf")
 SAMPLES = [os.path.basename(f).split("_")[0] for f in input_files]
 
-# Rule to define the final output files for all samples (targets funcotator outputs)
+
 rule all:
     input:
         expand("/mnt/scratch/nazilak/CLC_vcf/Funcotator/{sample}_annotatedCLC.vcf", sample=SAMPLES)
 
-# Rule to transform VCF files
 rule transform_vcf:
     input:
         lambda wildcards: glob.glob(f"/mnt/scratch/nazilak/CLC_vcf/Annotated_somatic_variants/{wildcards.sample}_B*.vcf")[0]
@@ -45,7 +44,7 @@ rule transform_vcf:
         }}' {input} > {output}
         """
 
-# Rule to annotate VCF files using Funcotator
+
 rule funcotator:
     input:
         ref="/mnt/scratch/nazilak/resource_bundle_gatk/hg19.fa",

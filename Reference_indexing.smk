@@ -16,14 +16,12 @@ rule ref_index:
         Reference_genome + ".bwt",  
         Reference_genome + ".pac",  
         Reference_genome + ".sa",
-        #test med minichromosom 
+
     shell: 
         """
         bwa index {input.ref} 
         """
-        # Add -p option to specify prefix -p {Reference_genome}
-
-
+    
 rule fai:
     input:
         ref = Reference_genome + ".fa"  

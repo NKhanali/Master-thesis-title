@@ -8,10 +8,9 @@ import matplotlib.pyplot as plt
 
 
 def create_variant_heatmap(csv_path):
-    # Read the CSV file
     df = pd.read_csv(csv_path)
     
-    # Divide similar variant classification into the same category
+
     classification_map = {
         "MISSENSE": "MISSENSE",
         "FRAME_SHIFT_DEL": "FRAME_SHIFT",
@@ -43,26 +42,26 @@ def create_variant_heatmap(csv_path):
     }
     df["Impact Rank"] = df["Merged Classification"].map(impact_ranking)
     
-    # For each sample and gene, select the variant with the highest impact (lowest rank)
+
     selected_variants = df.loc[df.groupby(["Sample_Nr", "Gene name"])["Impact Rank"].idxmin()]
     pivot_data = selected_variants.pivot(index="Gene name", columns="Sample_Nr", values="Impact Rank")
     
-    # Only show selected genes (the match between top 20 CLC and GATK genes)
+
     selected_genes = ["ARID1B", "CREBBP", "FOXL2", "KMT2C", "KMT2D", "LRP1B", "NOTCH1", "RB1", "ROS1", "TP53"]
     pivot_data = pivot_data.loc[selected_genes]
 
     variant_counts = pivot_data.notna().sum(axis=1)
     pivot_data = pivot_data.loc[variant_counts.sort_values(ascending=True).index]
 
-    # Ensure all sample numbers are included in the heatmap
+
     sample_numbers = df["Sample_Nr"].astype(str).str.extract(r"(\d+)")[0].astype(int).unique()
     sample_numbers = sorted(sample_numbers)
     pivot_data.columns = pivot_data.columns.astype(str).str.extract(r"(\d+)")[0].astype(float).astype('Int64')
     pivot_data = pivot_data.reindex(columns=sample_numbers)
-    full_sample_range = list(range(1, 64))  # 1 to 63 inclusive
+    full_sample_range = list(range(1, 64))  
     pivot_data = pivot_data.reindex(columns=full_sample_range)
 
-    # --- Begin Option 1: Custom colorbar ---
+
     fig, ax = plt.subplots(figsize=(10,5))
 
     num_categories = len(impact_ranking)
@@ -71,7 +70,7 @@ def create_variant_heatmap(csv_path):
     bounds = list(range(1, num_categories + 2))
     norm = BoundaryNorm(bounds, cmap.N)
 
-    # Draw heatmap without colorbar
+
     sns.heatmap(
         pivot_data,
         cmap=cmap,
@@ -80,25 +79,25 @@ def create_variant_heatmap(csv_path):
         cbar=False
     )
 
-    # Create custom colorbar
+
     sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap)
     cbar = fig.colorbar(
         sm,
         ax=ax,
         orientation='vertical',
-        fraction=0.05,  # smaller = thinner colorbar
+        fraction=0.05,  
         pad=0.02,
-        aspect=50        # higher = thinner colorbar
+        aspect=50        
     )
 
-    # Configure colorbar ticks and labels
+
     rank_to_variant = {rank: variant for variant, rank in impact_ranking.items()}
     all_ranks = sorted(impact_ranking.values())
     cbar.set_ticks(all_ranks)
     cbar.set_ticklabels([rank_to_variant[rank] for rank in all_ranks])
     cbar.set_label("Variant Classification", fontsize=16)
 
-    # Final formatting
+
     ax.set_xlabel("Sample Number", fontsize=16)
     ax.set_ylabel("Gene Name", fontsize=16)
     ax.tick_params(axis='x', labelsize=8)
@@ -112,5 +111,4 @@ def create_variant_heatmap(csv_path):
     print('Done! heatmapCLC.svg')
 
 
-# Example usage:
 create_variant_heatmap("/mnt/scratch/nazilak/Results/Protein_change/filtered_funcotation_outputCLC.csv")

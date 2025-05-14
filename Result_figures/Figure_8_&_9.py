@@ -3,10 +3,7 @@ import os
 import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
-#Structure of the CHROM header on the GATK and CLC vcf files
-#GATK: #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  1_N     1_T
-#CLC:  #CHROM  POS     ID      REF     ALT     QUAL    FILTER  INFO    FORMAT  Annotated_somatic_variants-B025,_B099
-# Define the function to parse VCF files
+
 def vcf(file_path, workflow, sample_type=None):
     data = []
     samples = []
@@ -31,7 +28,6 @@ def vcf(file_path, workflow, sample_type=None):
                 elif workflow == 'CLC':
                     filt = sample_type
 
-                # Improved FUNCOTATION parsing
                 gene = ''
                 variant_class = ''
                 if "FUNCOTATION=" in info:
@@ -45,11 +41,11 @@ def vcf(file_path, workflow, sample_type=None):
                             if len(funcotation_values) > 5:
                                 gene_candidate = funcotation_values[0].strip().upper()
                                 variant_class_candidate = funcotation_values[5].strip().upper()
-                                # Only assign if not empty
+                                
                                 if gene_candidate and variant_class_candidate:
                                     gene = gene_candidate
                                     variant_class = variant_class_candidate
-                                    break  # Use the first valid annotation
+                                    break  
                     except Exception as e:
                         print(f"Warning: Failed to parse FUNCOTATION in line with error: {e}")
 
@@ -75,12 +71,10 @@ def vcf(file_path, workflow, sample_type=None):
 
 
 
-# Paths to the VCF files
 gatk_path = "/mnt/scratch/nazilak/GATK/Variant_calling/Liftover/"
 clc_annotated_path = "/mnt/scratch/nazilak/CLC_vcf/Funcotator/"
 clc_low_freq_path = "/mnt/scratch/nazilak/CLC_vcf/Somatic_variants_with_low_frequency_in_germline/"
 
-# Function to process all files
 def process_files(gatk_path, clc_annotated_path, clc_low_freq_path):
     all_data = []
 
@@ -113,28 +107,24 @@ def process_files(gatk_path, clc_annotated_path, clc_low_freq_path):
 
     return combined
 
-# Process and save
+
 combined_data = process_files(gatk_path, clc_annotated_path, clc_low_freq_path)
 combined_data.to_csv("/mnt/scratch/nazilak/Results/variant_comparison.csv", index=False)
 print("Combined data saved to /mnt/scratch/nazilak/Results/variant_comparison.csv")
 
 ############################# FIGURE 8 ##############################################
-# Summarize and plot GATK filter information
 plot_path = "/mnt/scratch/nazilak/Results/GATK_filters_overview.png"
 
 gatk_data = combined_data[combined_data['workflow'] == 'GATK']
 filter_counts_with_samples = {}
 
-# Prepare data
 filters = []
 counts = []
 for filter_item, info in sorted(filter_counts_with_samples.items(), key=lambda x: x[1]['count'], reverse=True):
     filters.append(filter_item)
     counts.append(info['count'])
 
-# Create a more compact and readable bar chart
-# Create a taller and narrower bar chart
-plt.figure(figsize=(7, 6))  # Reduced width, increased height
+plt.figure(figsize=(7, 6)) 
 
 bars = plt.bar(filters, counts, color='steelblue')
 
@@ -151,7 +141,6 @@ plt.savefig(plot_path, dpi=150)
 print(f"Bar chart saved to {plot_path}")
 
 ############################# FIGURE 9.A ##############################################
-# Create heatmap of GATK filters per sample (relative)
 
 heatmap_path = "/mnt/scratch/nazilak/Results/gatk_filter_heatmap_relative_ALL.png"
 
@@ -163,8 +152,7 @@ total_variants_per_sample = df_gatk.groupby('sample_nr').size()
 heatmap_data_relative = (heatmap_data / total_variants_per_sample) * 100
 heatmap_data_relative = heatmap_data_relative.sort_index()
 
-# Make the figure less tall and wider
-plt.figure(figsize=(10, 5))  # Adjust width and height as needed
+plt.figure(figsize=(10, 5)) 
 
 sns.heatmap(
     heatmap_data_relative,
@@ -178,7 +166,6 @@ sns.heatmap(
 plt.xlabel("Sample Number", fontsize=14)
 plt.ylabel("Filter Type", fontsize=14)
 
-# Show only every 5th sample number on X axis for readability
 step = 5
 xticks = range(0, len(heatmap_data_relative.columns), step)
 xticklabels = heatmap_data_relative.columns[::step]
@@ -197,35 +184,29 @@ plt.show()
 print(f"Heatmap saved as '{heatmap_path}'")
 
 ############################# FIGURE 9.B ##############################################
-# Create heatmap of GATK filters per sample (relative) from only FFPE Blocks
-# Define the list of sample numbers to include (total 47)
+
 selected_samples = {
     1, 4, 5, 8, 9, 11, 13, 14, 17, 18, 19, 20,
     22, 23, 24, 25, 26, 27, 29, 30, 31, 32, 33,
     34, 36, 37, 38, 39, 42, 43, 45, 46, 47, 48,
     49, 50, 51, 52, 53, 54, 57, 58, 59, 60, 61, 62, 63
 }
-selected_samples = {str(s) for s in selected_samples}  # ensure matching string type
+selected_samples = {str(s) for s in selected_samples}  
 
 filtered_heatmap_path = "/mnt/scratch/nazilak/Results/gatk_filter_heatmap_relative_FFPE.png"
 
-# Load the data
 df = pd.read_csv("/mnt/scratch/nazilak/Results/variant_comparison.csv")
 
-# Filter for GATK workflow and selected sample numbers
 df_gatk = df[(df['workflow'] == 'GATK') & (df['sample_nr'].astype(str).isin(selected_samples))]
 
-# Expand filter_status into multiple rows
 df_expanded = df_gatk.assign(filter_status=df_gatk['filter_status'].str.split(';')).explode('filter_status')
 
-# Group and compute relative frequencies
 heatmap_data = df_expanded.groupby(['filter_status', 'sample_nr']).size().unstack(fill_value=0)
 total_variants_per_sample = df_gatk.groupby('sample_nr').size()
 heatmap_data_relative = (heatmap_data / total_variants_per_sample) * 100
 heatmap_data_relative = heatmap_data_relative.sort_index()
 
-# Make the figure less tall and wider
-plt.figure(figsize=(9, 5))  # Adjust width and height as needed
+plt.figure(figsize=(9, 5))  
 
 sns.heatmap(
     heatmap_data_relative,
@@ -238,8 +219,6 @@ sns.heatmap(
 
 plt.xlabel("Sample Number", fontsize=14)
 plt.ylabel("Filter Type", fontsize=14)
-
-# Show only every 5th sample number on X axis for readability
 step = 5
 xticks = range(0, len(heatmap_data_relative.columns), step)
 xticklabels = heatmap_data_relative.columns[::step]
@@ -258,33 +237,26 @@ plt.show()
 print(f"Heatmap saved as '{filtered_heatmap_path}'")
 
 ############################# FIGURE 9.C ##############################################
-# Create heatmap of GATK filters per sample (relative) from only SMEARS
-#Total 16 samples
 selected_samples = {
     2, 3, 6, 7, 10, 12, 15, 16, 21, 28, 
     35, 40, 41, 44, 55, 56
 }
-selected_samples = {str(s) for s in selected_samples}  # ensure matching string type
+selected_samples = {str(s) for s in selected_samples} 
 
 filtered_heatmap_path = "/mnt/scratch/nazilak/Results/gatk_filter_heatmap_relative_SMEAR.png"
 
-# Load the data
 df = pd.read_csv("/mnt/scratch/nazilak/Results/variant_comparison.csv")
 
-# Filter for GATK workflow and selected sample numbers
 df_gatk = df[(df['workflow'] == 'GATK') & (df['sample_nr'].astype(str).isin(selected_samples))]
 
-# Expand filter_status into multiple rows
 df_expanded = df_gatk.assign(filter_status=df_gatk['filter_status'].str.split(';')).explode('filter_status')
 
-# Group and compute relative frequencies
 heatmap_data = df_expanded.groupby(['filter_status', 'sample_nr']).size().unstack(fill_value=0)
 total_variants_per_sample = df_gatk.groupby('sample_nr').size()
 heatmap_data_relative = (heatmap_data / total_variants_per_sample) * 100
 heatmap_data_relative = heatmap_data_relative.sort_index()
 
-# Make the figure less tall and wider
-plt.figure(figsize=(8, 5))  # Adjust width and height as needed
+plt.figure(figsize=(8, 5)) 
 
 sns.heatmap(
     heatmap_data_relative,
@@ -298,7 +270,6 @@ sns.heatmap(
 plt.xlabel("Sample Number", fontsize=14)
 plt.ylabel("Filter Type", fontsize=14)
 
-# Show only every 5th sample number on X axis for readability
 step = 5
 xticks = range(0, len(heatmap_data_relative.columns), step)
 xticklabels = heatmap_data_relative.columns[::step]

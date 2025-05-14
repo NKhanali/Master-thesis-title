@@ -2,17 +2,14 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib_venn import venn2
 import numpy as np
-from matplotlib.patches import Patch  # Required for custom legend
+from matplotlib.patches import Patch  
 from scipy.stats import pearsonr, spearmanr
 
-# Load the CSV file containing the variant data
 df = pd.read_csv("/mnt/scratch/nazilak/Results/variant_comparison.csv")
 
-# Filter the data to focus on GATK (ALL) and CLC (ALL) variants
 gatk = df[df['workflow'] == 'GATK'].copy()
 clc = df[df['workflow'] == 'CLC'].copy()
 
-# Remove duplicates (if any)
 gatk = gatk.drop_duplicates(subset=['chr', 'pos', 'ref', 'alt', 'sample_nr'])
 clc = clc.drop_duplicates(subset=['chr', 'pos', 'ref', 'alt', 'sample_nr'])
 
@@ -35,18 +32,15 @@ for sample in samples:
 
 
 #################################### FIGURE 12.C. ###############################
-# Venn diagram data
 total_gatk_variants = len(gatk)
 total_clc_variants = len(clc)
 total_matching_variants = len(all_matches)
 unique_gatk_variants = total_gatk_variants - total_matching_variants
 unique_clc_variants = total_clc_variants - total_matching_variants
 
-# Plotting
 fig = plt.figure(figsize=(12, 6))
 gs = fig.add_gridspec(1, 2, width_ratios=[5, 4])  
 
-# Bar plot
 ax1 = fig.add_subplot(gs[0, 0])
 indices = np.arange(len(samples))
 bar_width = 0.5
@@ -64,15 +58,12 @@ ax1.set_xticklabels([str(samples[i]) for i in range(0, len(samples), 3)], rotati
 ax1.set_xlabel("Sample Number", fontsize=16)
 ax1.set_ylabel("Number of Variants", fontsize=16)
 
-# Remove the legend from ax1
-# Custom legend handles for the bar plot
 legend_handles = [
     Patch(color='lightblue', label='Unique GATK Variants'),
     Patch(color='lightgreen', label='Unique CLC Variants'),
     Patch(color='salmon', label='Matching Variants')
 ]
 
-# Venn diagram
 ax2 = fig.add_subplot(gs[0, 1])
 venn = venn2(
     subsets=(unique_gatk_variants, unique_clc_variants, total_matching_variants),
@@ -85,21 +76,17 @@ venn.get_patch_by_id('11').set_color('salmon')
 venn.get_patch_by_id('10').set_color('lightblue')
 venn.get_patch_by_id('01').set_color('lightgreen')
 
-# Move the legend above the Venn diagram
 ax2.legend(handles=legend_handles, loc='upper center', bbox_to_anchor=(0.5, 1.35), ncol=1, fontsize=12, frameon=False)
 
-# Adjust layout and spacing
 plt.tight_layout()
 plt.subplots_adjust(wspace=0.3)
 
-# Save the figure
 plt.savefig("/mnt/scratch/nazilak/Results/Matching_variants/combined_matching_variants2.png")
 plt.show()
 
 
 ############################### SUPPLEMENTARY 8 ########################
-#make an overview of all samples jaccard similarity
-# Create summary DataFrame with relative percentages and Jaccard similarity
+
 summary_df = pd.DataFrame({
     'sample_nr': list(samples),
     'unique_clc': clc_unique_counts,
@@ -107,35 +94,28 @@ summary_df = pd.DataFrame({
     'match': match_counts
 })
 
-# Calculate Jaccard similarity and convert to percentage
-summary_df['jaccard_similarity'] = summary_df['match'] / (
-    summary_df['unique_clc'] + summary_df['unique_gatk'] + summary_df['match']
-) * 100  # percentage
 
-# Sort by Jaccard similarity in descending order
+summary_df['jaccard_similarity'] = summary_df['match'] / (
+    summary_df['unique_clc'] + summary_df['unique_gatk'] - summary_df['match']
+) * 100  
+
+
 summary_df = summary_df.sort_values(by='jaccard_similarity', ascending=False)
 
-# Save to CSV
 summary_df.to_csv("/mnt/scratch/nazilak/Results/Matching_variants/matching_summary2.csv", index=False)
 
 ########################### SUPPLEMENTARY 10_A3_B3_C3 ############################
-#correlation between the number of unique variants (from both workflows) and the number of matches (overlaps) across your samples?
 
 
-# === 1. Load Data ===
 summary_df = pd.read_csv("/mnt/scratch/nazilak/Results/Matching_variants/matching_summary2.csv")
 
-# === 2. Calculate sum of unique variants ===
 summary_df['unique_sum'] = summary_df['unique_gatk'] + summary_df['unique_clc']
 
-# === 3. Define plotting function ===
 def scatter_with_regression(x, y, xlabel, ylabel, out_file):
     plt.figure(figsize=(8,6))
     plt.scatter(x, y, color='blue', alpha=0.7, label='Samples')
-    # Regression line
     m, b = np.polyfit(x, y, 1)
     plt.plot(x, m*x + b, color='red', linestyle='--', label='Fit')
-    # Correlation
     r, p = pearsonr(x, y)
     plt.title(f"{xlabel} vs {ylabel}\nPearson r={r:.2f}, p={p:.3g}")
     plt.xlabel(xlabel)
@@ -145,9 +125,6 @@ def scatter_with_regression(x, y, xlabel, ylabel, out_file):
     plt.savefig(out_file)
     plt.close()
 
-# === 4. Make three scatter plots ===
-
-# 1. Unique GATK + Unique CLC
 scatter_with_regression(
     summary_df['unique_sum'],
     summary_df['match'],
@@ -156,7 +133,6 @@ scatter_with_regression(
     "/mnt/scratch/nazilak/Results/Matching_variants/2scatter_sum_vs_match.png"
 )
 
-# 2. Unique GATK only
 scatter_with_regression(
     summary_df['unique_gatk'],
     summary_df['match'],
@@ -165,7 +141,6 @@ scatter_with_regression(
     "/mnt/scratch/nazilak/Results/Matching_variants/2scatter_gatk_vs_match.png"
 )
 
-# 3. Unique CLC only
 scatter_with_regression(
     summary_df['unique_clc'],
     summary_df['match'],

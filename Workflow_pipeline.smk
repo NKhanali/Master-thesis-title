@@ -43,7 +43,7 @@ def get_sample_number(csv_file):
 
 SAMPLES_NUMBER = get_sample_number(sample_sheet)
 
-# Include homemade PON rules only if use_homemade_pon is true
+
 if use_homemade_pon:
     include: f"{CreateHomemadePON}/CreateHomemadePON.smk"
 
@@ -56,7 +56,7 @@ rule all:
         ),
 
     
-#DATA-PREPROCESSING-NORMAL
+
 rule Bwa_alignment_normal:
     input:   
         NR1 = NR1_sample_sheet,
@@ -299,7 +299,7 @@ rule GetPileupSummaries_normal:
             2> {log.log}
         """
 
-#DATA-PREPROCESSING-TUMOR
+
 rule Bwa_alignment_tumor:
     input:
         TR1 = TR1_sample_sheet,
@@ -544,7 +544,7 @@ rule GetPileupSummaries_tumor:
         """
 
 
-#CALCULATECONTAMINATION
+
 rule CalculateContamination:
     input: 
         summaries_tumor = f"{Variant_calling}/GetPileupSummaries/{{Sample}}_T.table",
@@ -587,7 +587,7 @@ rule CalculateContamination:
 
 
 
-#VARIANT CALLING 
+
 rule Mutect2:
     input:
         ref = Reference_genome + ".fa",

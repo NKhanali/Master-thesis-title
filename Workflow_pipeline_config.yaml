@@ -1,4 +1,3 @@
-#Configuration file for the GATK workflow
 
 Reference_genome: "/mnt/scratch/nazilak/ref_index/reference_hg38_with_chr"
 logpath: "/mnt/scratch/nazilak/GATK/logs"
@@ -14,10 +13,10 @@ homemade_PON: "/mnt/scratch/nazilak/GATK/Variant_calling/homemade_PON"
 CreateHomemadePON: "/home/nazilak/Master/Script-gatk"
 
 singularity:
-  enabled: true #whether or not to run with singularity 
-  bind_directory: "/mnt/scratch" #Directory to bind to the container
-  singularity_image: "/home/nazilak/gatk_latest.sif" #gatk image to run 
+  enabled: true  
+  bind_directory: "/mnt/scratch" 
+  singularity_image: "/home/nazilak/gatk_latest.sif"
 
 
 use_homemade_pon: false
-update_genomicsdb: false # Set to true to update the workspace, need to run it first to create
+update_genomicsdb: false 

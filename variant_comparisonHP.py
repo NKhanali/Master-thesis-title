@@ -4,7 +4,7 @@ import glob
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Define the function to parse VCF files
+
 def vcf(file_path, workflow, sample_type=None):
     data = []
     samples = []
@@ -29,7 +29,6 @@ def vcf(file_path, workflow, sample_type=None):
                 elif workflow == 'CLC':
                     filt = sample_type
 
-                # Improved FUNCOTATION parsing
                 gene = ''
                 variant_class = ''
                 if "FUNCOTATION=" in info:
@@ -43,11 +42,11 @@ def vcf(file_path, workflow, sample_type=None):
                             if len(funcotation_values) > 5:
                                 gene_candidate = funcotation_values[0].strip().upper()
                                 variant_class_candidate = funcotation_values[5].strip().upper()
-                                # Only assign if not empty
+  
                                 if gene_candidate and variant_class_candidate:
                                     gene = gene_candidate
                                     variant_class = variant_class_candidate
-                                    break  # Use the first valid annotation
+                                    break 
                     except Exception as e:
                         print(f"Warning: Failed to parse FUNCOTATION in line with error: {e}")
 
@@ -73,12 +72,11 @@ def vcf(file_path, workflow, sample_type=None):
 
 
 
-# Paths to the VCF files
+
 gatk_path = "/mnt/scratch/nazilak/GATK/Variant_calling/homemade_PON/Liftover_PON/"
 clc_annotated_path = "/mnt/scratch/nazilak/CLC_vcf/Funcotator/"
 clc_low_freq_path = "/mnt/scratch/nazilak/CLC_vcf/Somatic_variants_with_low_frequency_in_germline/"
 
-# Function to process all files
 def process_files(gatk_path, clc_annotated_path, clc_low_freq_path):
     all_data = []
 
@@ -111,7 +109,7 @@ def process_files(gatk_path, clc_annotated_path, clc_low_freq_path):
 
     return combined
 
-# Process and save
+
 combined_data = process_files(gatk_path, clc_annotated_path, clc_low_freq_path)
 combined_data.to_csv("/mnt/scratch/nazilak/Results/variant_comparisonHP.csv", index=False)
 print("Combined data saved to /mnt/scratch/nazilak/Results/variant_comparisonHP.csv")
